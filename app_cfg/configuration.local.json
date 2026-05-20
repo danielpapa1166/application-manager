@@ -1,0 +1,50 @@
+{
+  "apps": [
+    {
+      "name": "rbuflogd",
+      "binary": "/data/projects/rbuflogd/build/rbuflogd",
+      "args": [
+        "-p", "/data/projects/application-manager/log/",
+        "-l", "0", 
+        "--log-init-success"
+      ],
+      "phases": ["WIFI_CONFIG", "API_CONFIG", "NORMAL"], 
+      "after": "", 
+      "environment": []
+    }, 
+    {
+      "name": "logger_check", 
+      "binary": "/data/projects/application-manager/src/build-local/logger_check/logger_check",
+      "args": ["--timeout", "10"],
+      "phases": ["WIFI_CONFIG", "API_CONFIG", "NORMAL"]
+    }, 
+    {
+      "name": "setup_sleep", 
+      "binary": "/bin/sleep",
+      "args": ["0.1"],
+      "phases": ["WIFI_CONFIG", "API_CONFIG"], 
+      "after": "logger_check"
+    }, 
+    {
+      "name": "setup_sleep_2", 
+      "binary": "/bin/sleep",
+      "args": ["0.1"],
+      "phases": ["WIFI_CONFIG", "API_CONFIG"], 
+      "after": "setup_sleep"
+    },
+    {
+      "name": "setup_sleep_3", 
+      "binary": "/bin/sleep",
+      "args": ["0.1"],
+      "phases": ["WIFI_CONFIG", "API_CONFIG"], 
+      "after": "setup_sleep_2"
+    }, 
+    {
+      "name": "setup_sleep_4", 
+      "binary": "/bin/sleep",
+      "args": ["0.1"],
+      "phases": ["WIFI_CONFIG", "API_CONFIG"], 
+      "after": "setup_sleep"
+    }
+  ]
+}

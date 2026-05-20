@@ -1,0 +1,6 @@
+*.service
+log
+flags
+.clangd
+src/build-clangd
+src/build-local
