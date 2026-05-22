@@ -139,12 +139,12 @@ static void reap_children(app_info_list_t * app_info_list, const siginfo_t * sig
 
 
 void * supervisor_thread(void * args) {
-  
-  supervisor_args_t * sup_args          = (supervisor_args_t *)args;
 
+  supervisor_args_t * sup_args          = (supervisor_args_t *)args;
   app_config_list_t * app_config_list   = sup_args->app_config_list;
-  app_info_list_t * app_info_list       = sup_args->app_info_list;
-  
+  app_info_list_t   * app_info_list     = sup_args->app_info_list;
+  free(sup_args);
+
   int res = trigger_app_start(app_config_list, app_info_list);
 
   sigset_t mask;

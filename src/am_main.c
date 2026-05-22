@@ -48,9 +48,14 @@ int main(int argc, char * argv[])
   const char * boot_mode_str = boot_mode_to_string(boot_mode);
   fprintf(stderr, "am: determined boot mode: %s\n", boot_mode_str);
   
-  config_list = filter_app_info_by_phase(
+   app_config_list_t * config_list_filt = filter_app_info_by_phase(
     boot_mode_str, 
     config_list);
+
+  free(config_list->app);
+  free(config_list);
+
+  config_list = config_list_filt;
 
 
 
@@ -141,19 +146,24 @@ static int create_supervisor_thread(
     return 1;
   }
 
-  supervisor_args_t sup_args = {
-    .app_config_list    = app_config_list,
-    .app_info_list      = app_info_list
-  };
+  supervisor_args_t * sup_args = malloc(sizeof(supervisor_args_t));
+  if (sup_args == NULL) {
+    log_error("main", "failed to allocate supervisor args");
+    return 1;
+  }
+  sup_args->app_config_list = app_config_list;
+  sup_args->app_info_list   = app_info_list;
+
   pthread_t sup_thread;
   const int thread_status = pthread_create(
     &sup_thread, 
     NULL, 
     supervisor_thread, 
-    &sup_args);
+    sup_args);
 
   if (thread_status != 0) {
     log_error("main", "failed to create supervisor thread");
+    free(sup_args);
     return 1;
   }
   else {
