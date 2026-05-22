@@ -151,6 +151,8 @@ const char * launch_status_to_string(launch_status_t status) {
       return "OK";
     case LAUNCH_OK_NOT_LAUNCHED: 
       return "OK_NOT_LAUNCHED"; 
+    case LAUNCH_OK_DELAYED_LAUNCH:
+      return "OK_DELAYED_LAUNCH";
     case LAUNCH_ERR_INVALID_CONFIG:
       return "ERR_INVALID_CONFIG";
     case LAUNCH_ERR_INTERNAL:

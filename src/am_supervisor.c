@@ -51,12 +51,6 @@ static void log_app_launch_status(
 
 
 static int trigger_app_start(app_config_list_t * app_cfg_list, app_info_list_t * app_info_list) {
-  // This function can be used to implement delayed launches based on app status
-  // For now, it simply returns 1 to indicate the app should be launched immediately
-  (void)app_cfg_list;
-  (void)app_info_list;
-
-
   for (int i = 0; i < app_cfg_list->num_apps; i++) {
 
     const launch_status_t status = launch_app(

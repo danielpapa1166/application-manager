@@ -12,14 +12,11 @@
 #include "am_supervisor.h"
 #include "am_boot_mode.h"
 
-
-static const int LOGGER_APP_INDEX = 0;
 // ----------------------------------------------------------------------------
 // internal helper functions
 // ----------------------------------------------------------------------------
 static app_config_list_t * filter_app_info_by_phase(
-    const char * phase, const app_config_list_t * app_config_list, 
-    const app_info_list_t * app_info_list);
+    const char * phase, const app_config_list_t * app_config_list);
 static void init_app_config_struct(
   app_config_list_t * app_config_list, const app_info_list_t * app_info_list); 
 static int create_supervisor_thread(
@@ -53,8 +50,8 @@ int main(int argc, char * argv[])
   
   config_list = filter_app_info_by_phase(
     boot_mode_str, 
-    config_list, 
-    NULL);
+    config_list);
+
 
 
   app_info_list_t app_info_list = {
@@ -90,8 +87,7 @@ int main(int argc, char * argv[])
 
 
 static app_config_list_t * filter_app_info_by_phase(
-    const char * phase, const app_config_list_t * app_config_list, 
-    const app_info_list_t * app_info_list) {
+    const char * phase, const app_config_list_t * app_config_list) {
 
   app_config_list_t * filtered_list = (app_config_list_t *)malloc(sizeof(app_config_list_t));
   int num_of_apps_in_phase = 0;
