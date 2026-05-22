@@ -126,6 +126,7 @@ static void init_app_config_struct(
     app_config_list_t * app_config_list, const app_info_list_t * app_info_list) {
   
   for (int i = 0; i < app_config_list->num_apps; i++) {
+    app_info_list->app[i].name = strdup(app_config_list->app[i].name);
     app_config_list->app[i].info = &app_info_list->app[i];
     app_info_list->app[i].status = APP_STATUS_NOT_STARTED;
   }

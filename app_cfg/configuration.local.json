@@ -9,42 +9,44 @@
         "--log-init-success"
       ],
       "phases": ["WIFI_CONFIG", "API_CONFIG", "NORMAL"], 
-      "after": "", 
+      "after_exited": "", 
+      "after_started": "", 
       "environment": []
     }, 
     {
       "name": "logger_check", 
       "binary": "/data/projects/application-manager/src/build-local/logger_check/logger_check",
       "args": ["--timeout", "10"],
-      "phases": ["WIFI_CONFIG", "API_CONFIG", "NORMAL"]
+      "phases": ["WIFI_CONFIG", "API_CONFIG", "NORMAL"], 
+      "after_started": "rbuflogd"
     }, 
     {
       "name": "setup_sleep", 
       "binary": "/bin/sleep",
       "args": ["0.1"],
       "phases": ["WIFI_CONFIG", "API_CONFIG"], 
-      "after": "logger_check"
+      "after_exited": "logger_check"
     }, 
     {
       "name": "setup_sleep_2", 
       "binary": "/bin/sleep",
       "args": ["0.1"],
       "phases": ["WIFI_CONFIG", "API_CONFIG"], 
-      "after": "setup_sleep"
+      "after_exited": "setup_sleep"
     },
     {
       "name": "setup_sleep_3", 
       "binary": "/bin/sleep",
       "args": ["0.1"],
       "phases": ["WIFI_CONFIG", "API_CONFIG"], 
-      "after": "setup_sleep_2"
+      "after_exited": "setup_sleep_2"
     }, 
     {
       "name": "setup_sleep_4", 
       "binary": "/bin/sleep",
       "args": ["0.1"],
       "phases": ["WIFI_CONFIG", "API_CONFIG"], 
-      "after": "setup_sleep"
+      "after_exited": "setup_sleep"
     }
   ]
 }

@@ -100,17 +100,30 @@ static parse_status_t parse_json_element(
     return status;
   }
 
-  cJSON * after = cJSON_GetObjectItem(element, "after");
+  cJSON * after = cJSON_GetObjectItem(element, "after_exited");
   if (cJSON_IsString(after)) {
     if(strlen(after->valuestring) == 0) {
-      app_out->after = NULL;
+      app_out->after_exited = NULL;
     }
     else {
-      app_out->after = strdup(after->valuestring);
+      app_out->after_exited = strdup(after->valuestring);
     }
   } 
   else {
-    app_out->after = NULL;
+    app_out->after_exited = NULL;
+  }
+
+  cJSON * after_started = cJSON_GetObjectItem(element, "after_started");
+  if (cJSON_IsString(after_started)) {
+    if(strlen(after_started->valuestring) == 0) {
+      app_out->after_started = NULL;
+    }
+    else {
+      app_out->after_started = strdup(after_started->valuestring);
+    }
+  } 
+  else {
+    app_out->after_started = NULL;
   }
 
   cJSON * folder = cJSON_GetObjectItem(element, "folder");
