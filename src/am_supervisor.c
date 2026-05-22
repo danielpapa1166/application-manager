@@ -50,7 +50,13 @@ static void log_app_launch_status(
 }
 
 
-static int trigger_app_start(app_config_list_t * app_cfg_list, app_info_list_t * app_info_list) {
+typedef enum {
+  TRIGGER_NO_NEW_LAUNCH,
+  TRIGGER_LAUNCHED_NEW_APP
+} trigger_status_t;
+
+static trigger_status_t trigger_app_start(app_config_list_t * app_cfg_list, app_info_list_t * app_info_list) {
+  trigger_status_t result = TRIGGER_NO_NEW_LAUNCH;
   for (int i = 0; i < app_cfg_list->num_apps; i++) {
 
     const launch_status_t status = launch_app(
@@ -58,10 +64,12 @@ static int trigger_app_start(app_config_list_t * app_cfg_list, app_info_list_t *
       app_info_list);
 
     log_app_launch_status(i, &app_cfg_list->app[i], status);
+
+    if (status == LAUNCH_OK) {
+      result = TRIGGER_LAUNCHED_NEW_APP;
+    }
   }
-
-
-  return 1;
+  return result;
 }
 
 
@@ -145,19 +153,19 @@ void * supervisor_thread(void * args) {
   app_info_list_t   * app_info_list     = sup_args->app_info_list;
   free(sup_args);
 
-  int res = trigger_app_start(app_config_list, app_info_list);
-
   sigset_t mask;
   sigemptyset(&mask);
   sigaddset(&mask, SIGCHLD);
   siginfo_t info;
-        
+
+  while (trigger_app_start(app_config_list, app_info_list));
+
   while (1) {
     if (sigwaitinfo(&mask, &info) > 0) {
 
       reap_children(app_info_list, &info);
 
-      res = trigger_app_start(app_config_list, app_info_list);
+      while (trigger_app_start(app_config_list, app_info_list));
     }
   }
   return NULL;

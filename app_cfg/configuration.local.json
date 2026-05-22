@@ -47,6 +47,22 @@
       "args": ["0.1"],
       "phases": ["WIFI_CONFIG", "API_CONFIG"], 
       "after_exited": "setup_sleep"
+    },
+    {
+      "name": "test_task_1", 
+      "binary": "/usr/bin/apt-get",
+      "args": ["moo"],
+      "phases": ["WIFI_CONFIG", "API_CONFIG"],
+      "after_started": "test_task_2"
+    }, 
+
+    {
+      "name": "test_task_2", 
+      "binary": "/bin/sleep",
+      "args": ["3"],
+      "phases": ["WIFI_CONFIG", "API_CONFIG"],
+      "after_exited": "setup_sleep_3"
     }
+
   ]
 }
