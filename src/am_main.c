@@ -81,7 +81,7 @@ int main(int argc, char * argv[])
     return 1;
   }
 
-  const int http_stat = am_http_server_start(&app_info_list, 8080);
+  const int http_stat = am_http_server_start(&app_info_list, 8080, "./www");
   if (http_stat != 0) {
     fprintf(stderr, "am: failed to start HTTP status server\n");
     return 1;

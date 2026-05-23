@@ -13,13 +13,78 @@
  * Module state
  * -------------------------------------------------------------------------- */
 
+/* Describes a single static file to be served */
+typedef struct {
+  char        www_dir[512];
+  const char *filename;
+  const char *content_type;
+} static_file_ctx_t;
+
+#define STATIC_FILE_COUNT 3
+
 typedef struct {
   const app_info_list_t *app_info_list;
   chttp_server_t        *server;
+  static_file_ctx_t      static_files[STATIC_FILE_COUNT];
 } http_server_ctx_t;
 
 static http_server_ctx_t  g_ctx;
 static pthread_t          g_thread;
+
+/* --------------------------------------------------------------------------
+ * Static file serving
+ * -------------------------------------------------------------------------- */
+
+/* Read a file from disk into a heap buffer; sets *len_out to the byte count.
+ * Returns NULL on error. Caller must free the returned buffer. */
+static char *read_file_bytes(const char *path, size_t *len_out)
+{
+  FILE *f = fopen(path, "rb");
+  if (!f) return NULL;
+
+  if (fseek(f, 0, SEEK_END) != 0) { fclose(f); return NULL; }
+  const long size = ftell(f);
+  if (size < 0)                    { fclose(f); return NULL; }
+  rewind(f);
+
+  char *buf = (char *)malloc((size_t)size + 1);
+  if (!buf)                        { fclose(f); return NULL; }
+
+  if (fread(buf, 1, (size_t)size, f) != (size_t)size) {
+    free(buf); fclose(f); return NULL;
+  }
+  buf[size] = '\0';
+  fclose(f);
+
+  *len_out = (size_t)size;
+  return buf;
+}
+
+static void handle_static_file(const chttp_request_t *req,
+                               chttp_response_t      *resp,
+                               void                  *user_data)
+{
+  (void)req;
+  const static_file_ctx_t *ctx = (const static_file_ctx_t *)user_data;
+
+  char path[640];
+  snprintf(path, sizeof(path), "%s/%s", ctx->www_dir, ctx->filename);
+
+  size_t len = 0;
+  char  *body = read_file_bytes(path, &len);
+  if (!body) {
+    resp->status       = "404 Not Found";
+    resp->content_type = "text/plain";
+    resp->body         = strdup("not found");
+    resp->body_len     = 9;
+    return;
+  }
+
+  resp->status       = "200 OK";
+  resp->content_type = ctx->content_type;
+  resp->body         = body;
+  resp->body_len     = len;
+}
 
 /* --------------------------------------------------------------------------
  * Helpers
@@ -125,7 +190,9 @@ static void *http_server_thread(void *arg)
  * Public API
  * -------------------------------------------------------------------------- */
 
-int am_http_server_start(const app_info_list_t *app_info_list, uint16_t port)
+int am_http_server_start(const app_info_list_t *app_info_list,
+                         uint16_t port,
+                         const char *www_dir)
 {
   g_ctx.app_info_list = app_info_list;
   g_ctx.server = chttp_server_create(port);
@@ -134,17 +201,40 @@ int am_http_server_start(const app_info_list_t *app_info_list, uint16_t port)
     return -1;
   }
 
-
-  const int stat = chttp_server_register_route(
-      g_ctx.server, "GET", "/status",
-      handle_status,
-      (void *)app_info_list);
-
-  if (stat != 0) {
+  if (chttp_server_register_route(g_ctx.server, "GET", "/status",
+                                  handle_status,
+                                  (void *)app_info_list) != 0) {
     log_error("http", "failed to register /status route");
     chttp_server_destroy(g_ctx.server);
     g_ctx.server = NULL;
     return -1;
+  }
+
+  /* Register static file routes when a www directory is provided */
+  if (www_dir) {
+    static const struct { const char *route; const char *file; const char *ct; }
+    static_defs[STATIC_FILE_COUNT] = {
+      { "/",          "index.html", "text/html"              },
+      { "/style.css", "style.css",  "text/css"               },
+      { "/app.js",    "app.js",     "application/javascript" },
+    };
+
+    for (int i = 0; i < STATIC_FILE_COUNT; i++) {
+      snprintf(g_ctx.static_files[i].www_dir,
+               sizeof(g_ctx.static_files[i].www_dir),
+               "%s", www_dir);
+      g_ctx.static_files[i].filename     = static_defs[i].file;
+      g_ctx.static_files[i].content_type = static_defs[i].ct;
+
+      if (chttp_server_register_route(g_ctx.server, "GET", static_defs[i].route,
+                                      handle_static_file,
+                                      &g_ctx.static_files[i]) != 0) {
+        log_error("http", "failed to register static file route");
+        chttp_server_destroy(g_ctx.server);
+        g_ctx.server = NULL;
+        return -1;
+      }
+    }
   }
 
   const int rc = pthread_create(
